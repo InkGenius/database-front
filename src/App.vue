@@ -29,7 +29,7 @@ export default {
   created () {
     // var session = this.$cookie.get('sessionID')
     // if (session) {
-      this.$store.commit('login')
+    this.$store.commit('login')
     // }
   },
   computed: {

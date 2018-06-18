@@ -1,20 +1,46 @@
 <template>
 <div class="chart-warp">
-  <div class="main" style="width: 100%;height:500px;">dsdfasd</div>
+  <div>
+    <el-row class="search-area">
+      <el-col :span="4"><div class="grid-content bg-purple"></div></el-col>
+      <el-col :span="4"><div class="grid-content bg-purple-light"></div></el-col>
+      <el-col :span="4">
+        <div class="block">
+          <el-date-picker v-model="period" type="daterange" :default-value = "startDate" format="yyyy 年 MM 月 dd 日"
+          value-format="yyyy-MM-dd"
+          range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+        </div>
+      </el-col>
+      <el-col :span="4">
+        <el-select v-model="domain" filterable placeholder="请选择">
+          <el-option v-for="item in domainOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+        </el-select>
+        <el-button icon="el-icon-search" circle @click="query()"></el-button>
+      </el-col>
+      <el-col :span="4"><div class="grid-content bg-purple"></div></el-col>
+      <el-col :span="4"><div class="grid-content bg-purple"></div></el-col>
+    </el-row>
+  </div>
+  <div class="main" style="width: 100%;height:500px;"></div>
 </div>
 </template>
 
 <script>
 import echarts from 'echarts'
+import axios from 'axios'
 export default {
   data () {
     return {
       myChart: {},
       option: {},
-      interval: {},
-      oldChartId: {},
-      socket: {}
+      startDate: '',
+      url: window.g.SERVER_HOST + '/user/active',
+      domainUrl: window.g.SERVER_HOST + '/article/domain',
+      period: '',
+      domain: ''
     }
+  },
+  components: {
   },
   created () {
   },
@@ -25,10 +51,34 @@ export default {
         this.myChart.resize()
       }.bind(this))
     },
-    getChartOption () {
+    query () {
+      console.log(this.period)
+      axios.post(this.url, {
+        startDate: this.period[0],
+        endDate: this.period[1],
+        domain: this.domain
+      }).then((res) => {
+        var dates = []
+        var views = []
+        var publishs = []
+        var comments = []
+
+        res.data.forEach(obj => {
+          dates.push(obj.date)
+          views.push(obj.view)
+          publishs.push(obj.publish)
+          comments.push(obj.comment)
+        })
+        this.option = this.getChartOption(dates, views, publishs, comments)
+        this.myChart.setOption(this.option)
+      }).catch(function (error) {
+        console.log(error)
+      })
+    },
+    getChartOption (dates, views, publishs, comments) {
       var option = {
         title: {
-          text: '文章活跃数据'
+          text: this.domain + '--文章活跃数据'
         },
         tooltip: {
           trigger: 'axis'
@@ -50,7 +100,7 @@ export default {
         xAxis: {
           type: 'category',
           boundaryGap: false,
-          data: ['2018-6-6', '2018-6-7', '2018-6-8', '2018-6-9', '2018-6-10', '2018-6-11', '2018-6-12']
+          data: dates
         },
         yAxis: {
           type: 'value'
@@ -59,20 +109,17 @@ export default {
           {
             name: '发表文章数',
             type: 'line',
-            stack: '总量',
-            data: [120, 132, 101, 134, 90, 230, 210]
+            data: publishs
           },
           {
             name: '浏览文章数',
             type: 'line',
-            stack: '总量',
-            data: [220, 182, 191, 234, 290, 330, 310]
+            data: views
           },
           {
             name: '评论文章数',
             type: 'line',
-            stack: '总量',
-            data: [150, 232, 201, 154, 190, 330, 410]
+            data: comments
           }
         ]
       }
@@ -85,9 +132,22 @@ export default {
     var position = '.main'
     var target = document.querySelector(position)
     this.myChart = echarts.init(target)
-    this.option = this.getChartOption()
-    this.myChart.setOption(this.option)
     this.init()
+    axios.get(this.domainUrl, {
+    }).then((res) => {
+      var temp = {}
+      this.domainOptions = []
+      res.data.forEach(obj => {
+        temp.label = obj
+        temp.value = obj
+        this.domainOptions.push(temp)
+      })
+      console.log(this.domainOptions)
+    }).catch(function (error) {
+      console.log(error)
+    })
+    this.startDate = new Date()
+    this.startDate.setFullYear(2015, 0, 1)
   },
   destroyed: function () {
   }
@@ -99,4 +159,34 @@ export default {
    width:100%;
    height:100%;
 }
+
+.search-area{
+  margin-top:100px;
+  margin-bottom: 20px;
+}
+
+ /* .el-row {
+    margin-bottom: 20px;
+  } */
+  .el-col {
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  /* .bg-purple-dark {
+    background: #99a9bf;
+  }
+  .bg-purple {
+    background: #d3dce6;
+  }
+  .bg-purple-light {
+    background: #e5e9f2;
+  } */
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
 </style>

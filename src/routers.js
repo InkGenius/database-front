@@ -29,16 +29,16 @@ const routers = [{
   name: 'article',
   component: Article,
   meta: {keepAlive: true}
-},{
-    path: '/report',
-    name: 'report',
-    component: Report,
-    meta: {keepAlive: false}
-  }, {
-    path: '/comparison',
-    name: 'comparison',
-    component: Comparison,
-    meta: {keepAlive: false}
-  }]
+}, {
+  path: '/report',
+  name: 'report',
+  component: Report,
+  meta: {keepAlive: false}
+}, {
+  path: '/comparison',
+  name: 'comparison',
+  component: Comparison,
+  meta: {keepAlive: false}
+}]
 
 export default routers
