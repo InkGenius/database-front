@@ -7,30 +7,36 @@
             <div class="query_time" style="width: 100%;height:400px;"></div>
           </el-col>
           <el-col :span="12">
-            <el-table :data="tableData" border stripe style="width: 100%;margin-top:50px">
+            <el-table :data="mysqlTableData" border stripe style="width: 100%;margin-top:50px">
               <el-table-column
-                prop="query"
+                prop="name"
+                label="名称"
+                header-align = "center"
+                min-width="150">
+              </el-table-column>
+              <el-table-column
+                prop="method"
                 label="查询方式"
                 header-align = "center"
-                min-width="180">
+                min-width="150">
               </el-table-column>
               <el-table-column
                 prop="time"
                 label="查询时间"
                 header-align = "center"
-                min-width="180">
+                min-width="150">
               </el-table-column>
               <el-table-column
                 prop="cpu"
                 label="cpu"
                 header-align = "center"
-                min-width="180">
+                min-width="150">
               </el-table-column>
               <el-table-column
                 prop="memory"
                 label="内存消耗"
                 header-align = "center"
-                min-width="180">
+                min-width="150">
               </el-table-column>
             </el-table>
           </el-col>
@@ -39,7 +45,43 @@
       <div>
         <el-row>
           <el-col :span="12"><div class="cpu_useage" style="width: 100%;height:400px;"></div></el-col>
-          <el-col :span="12"><div class="memory_useage" style="width: 100%;height:400px;"></div></el-col>
+           <el-col :span="12">
+            <el-table :data="hiveTableData" border stripe style="width: 100%;margin-top:50px">
+              <el-table-column
+                prop="name"
+                label="名称"
+                header-align = "center"
+                min-width="150">
+              </el-table-column>
+              <el-table-column
+                prop="method"
+                label="查询方式"
+                header-align = "center"
+                min-width="150">
+              </el-table-column>
+              <el-table-column
+                prop="time"
+                label="查询时间"
+                header-align = "center"
+                min-width="150">
+              </el-table-column>
+              <el-table-column
+                prop="cpu"
+                label="cpu"
+                header-align = "center"
+                min-width="150">
+              </el-table-column>
+              <el-table-column
+                prop="memory"
+                label="内存消耗"
+                header-align = "center"
+                min-width="150">
+              </el-table-column>
+            </el-table>
+          </el-col>
+          </el-row>
+        <el-row>
+          <el-col :span="24"><div class="memory_useage" style="width: 100%;height:400px;"></div></el-col>
         </el-row>
       </div>
     </div>
@@ -47,7 +89,7 @@
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
 import echarts from 'echarts'
 export default {
   data () {
@@ -56,22 +98,8 @@ export default {
       queryTimeChart: '',
       cpuUseageChart: '',
       memoryUseageChart: '',
-      tableData: [{
-        query: '实验1',
-        time: '12',
-        cpu: '59%',
-        memory: '100'
-      }, {
-        query: '实验2',
-        time: '12',
-        cpu: '59%',
-        memory: '100'
-      }, {
-        query: '实验3',
-        time: '12',
-        cpu: '59%',
-        memory: '100'
-      }]
+      hiveTableData: [],
+      mysqlTableData: []
     }
   },
   methods: {
@@ -82,7 +110,7 @@ export default {
         this.memoryUseageChart.resize()
       }.bind(this))
     },
-    getQueryTimeChartOption () {
+    getQueryTimeChartOption (hiveTimes, mysqlTimes) {
       var option = {
         title: {
           text: '查询时间对比'
@@ -117,18 +145,18 @@ export default {
           {
             name: 'Mysql',
             type: 'bar',
-            data: [320, 332, 301, 320, 332, 301, 320, 332, 301, 120]
+            data: mysqlTimes
           },
           {
             name: 'Hive',
             type: 'bar',
-            data: [120, 132, 101, 320, 332, 301, 320, 332, 301, 320]
+            data: hiveTimes
           }
         ]
       }
       return option
     },
-    getMemoryUseageChartOption () {
+    getMemoryUseageChartOption (hiveMemorys, mysqlMemorys) {
       var option = {
         title: {
           text: '内存使用对比'
@@ -163,18 +191,18 @@ export default {
           {
             name: 'Mysql',
             type: 'bar',
-            data: [30, 33, 31, 30, 32, 1, 30, 32, 1, 10]
+            data: mysqlMemorys
           },
           {
             name: 'Hive',
             type: 'bar',
-            data: [30, 32, 30, 32, 32, 1, 30, 32, 31, 20]
+            data: hiveMemorys
           }
         ]
       }
       return option
     },
-    getCpuUseageChartOption () {
+    getCpuUseageChartOption (hiveCpus, mysqlCpus) {
       var option = {
         title: {
           text: 'cpu使用对比'
@@ -209,29 +237,61 @@ export default {
           {
             name: 'Mysql',
             type: 'bar',
-            data: [20, 332, 301, 320, 332, 301, 320, 332, 301, 12]
+            data: mysqlCpus
           },
           {
             name: 'Hive',
             type: 'bar',
-            data: [32, 33, 31, 32, 32, 1, 32, 332, 30, 12]
+            data: hiveCpus
           }
         ]
       }
       return option
+    },
+    getQueryComparison () {
+      var url = window.g.SERVER_HOST + '/user/comparison'
+      axios.get(url, {
+      }).then((res) => {
+        var hives = res.data.hive
+        this.hiveTableData = hives
+        var hiveTimes = []
+        var hiveCpus = []
+        var hiveMemorys = []
+        var hivaNames = []
+        hives.forEach(obj => {
+          hiveTimes.push(obj.time)
+          hiveCpus.push(obj.cpu)
+          hiveMemorys.push(obj.memory)
+          hivaNames.push(obj.name)
+        })
+
+        var mysqls = res.data.mysql
+        this.mysqlTableData = mysqls
+        var mysqlTimes = []
+        var mysqlCpus = []
+        var mysqlMemorys = []
+        var mysqlNames = []
+        mysqls.forEach(obj => {
+          mysqlTimes.push(obj.time)
+          mysqlCpus.push(obj.cpu)
+          mysqlMemorys.push(obj.memory)
+          mysqlNames.push(obj.name)
+        })
+        this.queryTimeChart.setOption(this.getQueryTimeChartOption(hiveTimes, mysqlTimes))
+        this.cpuUseageChart.setOption(this.getCpuUseageChartOption(hiveCpus, mysqlCpus))
+        this.memoryUseageChart.setOption(this.getMemoryUseageChartOption(hiveMemorys, mysqlMemorys))
+      }).catch(function (error) {
+        console.log(error)
+      })
     }
   },
   computed: {
   },
   mounted () {
     this.queryTimeChart = echarts.init(document.querySelector('.query_time'))
-    this.queryTimeChart.setOption(this.getQueryTimeChartOption())
-
     this.cpuUseageChart = echarts.init(document.querySelector('.cpu_useage'))
-    this.cpuUseageChart.setOption(this.getCpuUseageChartOption())
-
     this.memoryUseageChart = echarts.init(document.querySelector('.memory_useage'))
-    this.memoryUseageChart.setOption(this.getMemoryUseageChartOption())
+    this.getQueryComparison()
     this.init()
   },
   components: {

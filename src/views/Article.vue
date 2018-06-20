@@ -37,7 +37,8 @@ export default {
       url: window.g.SERVER_HOST + '/user/active',
       domainUrl: window.g.SERVER_HOST + '/article/domain',
       period: '',
-      domain: ''
+      domain: '',
+      domainOptions: {}
     }
   },
   components: {
